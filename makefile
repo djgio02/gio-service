@@ -57,3 +57,16 @@ tidy:
 	go mod tidy
 	go mod vendor	
 
+# ==============================================================================
+# Building containers
+
+build: sales  
+
+sales:
+	docker build \
+		-f zarf/docker/dockerfile.sales \
+		-t $(SALES_IMAGE) \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		--platform linux/amd64 \
+		.
