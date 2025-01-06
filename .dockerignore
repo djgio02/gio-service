@@ -1,6 +1,6 @@
 .dockerignore
 .gitingore
-#zarf/docker/
+zarf/docker/
 zarf/k8s/
 LICENSE
 makefile
