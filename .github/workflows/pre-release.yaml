@@ -1,5 +1,5 @@
 # .github/workflows/pre-release.yml
-name: Pre-release to Staging
+name: Pre-release to QA
 
 on:
   push:
@@ -31,9 +31,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get tag name
-        id: get-tag
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+#      - name: Get tag name
+#        id: get-tag
+#        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       - name: Set branch env
         if: github.ref_type != 'tag'
         run: |
@@ -56,7 +56,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-            echo "SHA_SHORT=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
+          
             TAG="v0.0.1-$(git rev-parse --short HEAD)"
 
             PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
@@ -74,18 +74,17 @@ jobs:
               --prerelease
 
 
-  deploy-staging:
+  deploy-QA:
     needs: validate-and-prerelease
     runs-on: ubuntu-latest
-    environment: staging
+    environment: QA
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.validate-and-prerelease.outputs.tag }}
 
-      - name: Deploy to Staging
+      - name: Deploy to QA
         run: |
           TAG="${{ needs.validate-and-prerelease.outputs.tag }}"
-          echo "🚀 Deploying $TAG to staging"
-          # Add your deployment commands here
+          echo "Deploying $TAG to QA"
