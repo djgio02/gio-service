@@ -1,4 +1,3 @@
-# .github/workflows/pre-release.yml
 name: Pre-release to QA
 
 on:
@@ -13,12 +12,10 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write  # Required to create releases
+  contents: write
 
 env:
   ENVIRONMENT: ""
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   validate-and-prerelease:
@@ -31,9 +28,6 @@ jobs:
         with:
           fetch-depth: 0
 
-#      - name: Get tag name
-#        id: get-tag
-#        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       - name: Set branch env
         if: github.ref_type != 'tag'
         run: |
@@ -58,7 +52,6 @@ jobs:
         run: |
           
             TAG="v0.0.1-$(git rev-parse --short HEAD)"
-
             PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
             if [[ -n "$PREVIOUS_TAG" ]]; then
@@ -84,7 +77,7 @@ jobs:
         with:
           ref: ${{ needs.validate-and-prerelease.outputs.tag }}
 
-      - name: Deploy to QA
+      - name: Release to QA
         run: |
           TAG="${{ needs.validate-and-prerelease.outputs.tag }}"
-          echo "Deploying $TAG to QA"
+          echo "Release $TAG to QA"
