@@ -47,7 +47,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="${{ steps.get-tag.outputs.tag }}"
+          TAG="${GITHUB_REF#refs/tags/}"
           
           # Generate release notes from commits since last tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
