@@ -16,6 +16,7 @@ permissions:
   contents: write  # Required to create releases
 
 env:
+  SHA_SHORT: ""
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -47,7 +48,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-            TAG="v$(date +%Y.%m.%d.%H%M)"
+            echo "SHA_SHORT=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
+            TAG="v0.0.1-$(shell git rev-parse --short HEAD)${{ env.SHA_SHORT }}"
 
             PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
