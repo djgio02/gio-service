@@ -49,7 +49,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
             echo "SHA_SHORT=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
-            TAG="v0.0.1-$(shell git rev-parse --short HEAD)${{ env.SHA_SHORT }}"
+            TAG="v0.0.1-$(git rev-parse --short HEAD)"
 
             PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
