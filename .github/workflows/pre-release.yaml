@@ -1,0 +1,80 @@
+# .github/workflows/pre-release.yml
+name: Pre-release to Staging
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # Required to create releases
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  validate-and-prerelease:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get-tag.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get tag name
+        id: get-tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Validate tag is on main branch
+        run: |
+          TAG="${{ steps.get-tag.outputs.tag }}"
+          TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+          
+          if git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+            echo "✅ Tag $TAG is on main branch"
+          else
+            echo "❌ Tag $TAG is NOT on main branch"
+            exit 1
+          fi
+
+      - name: Create GitHub Pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get-tag.outputs.tag }}"
+          
+          # Generate release notes from commits since last tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
+          
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            NOTES=$(git log --pretty=format:"- %s (%h)" "$PREVIOUS_TAG".."$TAG")
+          else
+            NOTES=$(git log --pretty=format:"- %s (%h)" "$TAG")
+          fi
+          
+          # Create pre-release using GitHub CLI (built into runners)
+          gh release create "$TAG" \
+            --title "Pre-release $TAG" \
+            --notes "$NOTES" \
+            --prerelease
+          
+          echo "✅ Created pre-release $TAG"
+
+  deploy-staging:
+    needs: validate-and-prerelease
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-and-prerelease.outputs.tag }}
+
+      - name: Deploy to Staging
+        run: |
+          TAG="${{ needs.validate-and-prerelease.outputs.tag }}"
+          echo "🚀 Deploying $TAG to staging"
+          # Add your deployment commands here
