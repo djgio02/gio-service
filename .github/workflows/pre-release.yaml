@@ -37,6 +37,35 @@ jobs:
             echo "SHOULD_PUSH=true" >> $GITHUB_ENV
           fi        
 
+      - name: Determine next semantic version
+        id: semver
+        shell: bash
+        run: |
+          set -e
+
+          # Get latest tag or fallback
+          LAST_TAG=$(git tag --sort=-v:refname | head -n 1)
+
+          if [[ -z "$LAST_TAG" ]]; then
+            MAJOR=0
+            MINOR=1
+            PATCH=0
+          else
+            VERSION="${LAST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+      - name: Create git tag
+        if: steps.tag_check.outputs.exists == 'false'
+        run: |
+          git tag "${{ steps.semver.outputs.new_tag }}"
+          git push origin "${{ steps.semver.outputs.new_tag }}"
+
       - name: Check if the tag is on main
         if: github.ref_type == 'tag'
         run: |
@@ -60,9 +89,9 @@ jobs:
               NOTES=$(git log --pretty=format:"- %s (%h)")
             fi
 
-            gh release create "$TAG" \
+            gh release create "${{ steps.semver.outputs.new_tag }}" \
               --target main \
-              --title "Pre-release $TAG" \
+              --title "Pre-release ${{ steps.semver.outputs.new_tag }}" \
               --notes "$NOTES" \
               --prerelease
 
