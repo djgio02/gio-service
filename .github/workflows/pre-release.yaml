@@ -16,7 +16,7 @@ permissions:
   contents: write  # Required to create releases
 
 env:
-  SHA_SHORT: ""
+  ENVIRONMENT: ""
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -34,6 +34,14 @@ jobs:
       - name: Get tag name
         id: get-tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      - name: Set branch env
+        if: github.ref_type != 'tag'
+        run: |
+
+          if [[ ${{ github.ref }} =~ ^refs/heads/main$ ]]; then
+            echo "ENVIRONMENT=main" >> $GITHUB_ENV;
+            echo "SHOULD_PUSH=true" >> $GITHUB_ENV
+          fi        
 
       - name: Check if the tag is on main
         if: github.ref_type == 'tag'
