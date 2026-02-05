@@ -23,11 +23,6 @@ on:
         type: choice
         options:
           - branch
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -92,19 +87,3 @@ jobs:
               --title "Pre-release $TAG" \
               --notes "$NOTES" \
               --prerelease
-
-
-  deploy-QA:
-    needs: validate-and-prerelease
-    runs-on: ubuntu-latest
-    environment: QA
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.validate-and-prerelease.outputs.tag }}
-
-      - name: Release to QA
-        run: |
-          TAG="${{ needs.validate-and-prerelease.outputs.tag }}"
-          echo "Release $TAG to QA"
