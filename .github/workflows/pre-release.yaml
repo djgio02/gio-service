@@ -37,8 +37,6 @@ env:
 jobs:
   validate-and-prerelease:
     runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.get-tag.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
