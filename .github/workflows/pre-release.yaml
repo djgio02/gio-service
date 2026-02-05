@@ -7,16 +7,14 @@ on:
         description: 'Branch or tag to build from'
         required: true
         default: 'main'
-      target_environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'main'
-        type: choice
-        options:
-          - 'DEV-DEV'
-          - 'QA'
-          - 'PRD-DEV'
-          - 'main'
+      release_type:
+          description: 'Release type'
+          required: true
+          type: choice
+          options:
+            - prerelease
+            - release
+          default: 'prerelease'
       ref_type:
         description: 'Reference type'
         required: true
@@ -74,7 +72,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           
-            TAG="v0.0.1-$(git rev-parse --short HEAD)"
+            TAG="${{ inputs.ref }}-$(git rev-parse --short HEAD)"
             PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
             if [[ -n "$PREVIOUS_TAG" ]]; then
@@ -82,6 +80,9 @@ jobs:
             else
               NOTES=$(git log --pretty=format:"- %s (%h)")
             fi
+            
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
 
             gh release create "$TAG" \
               --target main \
