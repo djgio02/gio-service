@@ -1,0 +1,22 @@
+name: Release to PRD
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch or tag to build from'
+        required: true
+        type: string
+        default: 'main'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Promocionar Pre-release a Release
+        env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            tag=$(gh release list | less -F | grep -i pre-release | head -n 1 | awk '{print $4}')
+            gh release edit $tag --prerelease=false --latest --title $tag
+
+        
