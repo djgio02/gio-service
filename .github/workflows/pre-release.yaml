@@ -43,6 +43,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Set branch env
         if: github.ref_type != 'tag'
         run: |
@@ -85,3 +90,4 @@ jobs:
               --title "Pre-release $TAG" \
               --notes "$NOTES" \
               --prerelease
+
